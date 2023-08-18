@@ -26,11 +26,23 @@ For a comprehensive overview of `solc-switch`, its functions, and detailed usage
 
 ## Installation
 
-There is no need to install anything. You can directly import it into your project and use it.
+To use solc-switch in your project, you don't need a separate installation. Simply import it directly:
 
 ```go
 import "github.com/0x19/solc-switch"
 ```
+
+### Setting Up Environment Variable
+
+Before you start, ensure you've set up the required environment variable for the GitHub personal access token:
+
+```bash
+export SOLC_SWITCH_GITHUB_TOKEN="{your_github_token_here}"
+```
+
+Replace **{your_github_token_here}** with your actual GitHub personal access token. If you don't have one, you can create it by following the instructions [here](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token).
+
+It is used to fetch the latest Solidity compiler releases from the official Solidity GitHub repository. If you don't set it up, you'll get an rate limit error quite quickly.
 
 ## Example Usage
 
