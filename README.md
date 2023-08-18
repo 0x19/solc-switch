@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/0x19/solc-switch)](https://pkg.go.dev/github.com/0x19/solc-switch)
 
-# Solc-Switch: A Concurrent Solidity Compiler Manager in Go
+# Solc-Switch: A Concurrent Solidity Manager & Compiler in Go
 
 **solc-switch** is more than just a tool; it's your partner in streamlining the Solidity development process. Built with Go, it's designed to let developers seamlessly switch between different Solidity compiler versions, ensuring optimal compatibility and a frictionless development experience.
 
