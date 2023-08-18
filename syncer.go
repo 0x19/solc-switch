@@ -1,9 +1,11 @@
 package solc
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/big"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -122,6 +124,10 @@ func (s *Solc) SyncBinaries(versions []Version, limitVersion string) error {
 					)
 
 					wg.Add(1)
+
+					// Just a bit of the time because we could receive 503 from GitHub so we don't want to spam them
+					time.Sleep(100 * time.Millisecond)
+
 					go func(v Version, a Asset, fName string) {
 						defer wg.Done()
 						select {
@@ -135,8 +141,6 @@ func (s *Solc) SyncBinaries(versions []Version, limitVersion string) error {
 							errorsCh <- fmt.Errorf("context cancelled")
 							return
 						default:
-							// Give it a second to avoid rate limiting and other issues
-							time.Sleep(1 * time.Second)
 							err := s.downloadFile(fName, a.BrowserDownloadURL)
 							if err != nil {
 								errorsCh <- fmt.Errorf("error downloading binary for version %s: %v", getCleanedVersionTag(v.TagName), err)
@@ -245,6 +249,9 @@ func (s *Solc) SyncOne(version *Version) error {
 // Returns:
 // - An error if there's any issue during the download process.
 func (s *Solc) downloadFile(file string, url string) error {
+	// Just a bit of the time because we could receive 503 from GitHub so we don't want to spam them
+	randomDelayBetween500And1500()
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return err
@@ -281,4 +288,14 @@ func (s *Solc) downloadFile(file string, url string) error {
 	}
 
 	return nil
+}
+
+// randomDelayBetween500And1500 sleeps for a random amount of time between 500 and 1500 milliseconds.
+func randomDelayBetween500And1500() {
+	n, err := rand.Int(rand.Reader, big.NewInt(1001))
+	if err != nil {
+		panic(err)
+	}
+	delay := n.Int64() + 500
+	time.Sleep(time.Duration(delay) * time.Millisecond)
 }
