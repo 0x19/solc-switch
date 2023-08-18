@@ -10,7 +10,7 @@ import (
 )
 
 func TestCompiler(t *testing.T) {
-	logger, err := GetDevelopmentLogger(zapcore.ErrorLevel)
+	logger, err := GetDevelopmentLogger(zapcore.DebugLevel)
 	assert.NoError(t, err)
 	assert.NotNil(t, logger)
 	zap.ReplaceGlobals(logger)
