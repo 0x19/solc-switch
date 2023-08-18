@@ -7,7 +7,7 @@
 
 # Solc-Switch: A Concurrent Solidity Manager & Compiler in Go
 
-**solc-switch** is more than just a tool; it's your partner in streamlining the Solidity development process. Built with Go, it's designed to let developers seamlessly switch between different Solidity compiler versions, ensuring optimal compatibility and a frictionless development experience.
+**solc-switch** is your partner in streamlining the Solidity development process. Built with Go, it's designed to let developers seamlessly switch between different Solidity compiler versions, ensuring optimal compatibility and a frictionless development experience.
 
 While **solc-switch** is lightweight, fast, and intuitive, it's primarily tailored for APIs and other tool integrations. It's not primarily intended for direct end-user interactions. If you're on the hunt for a CLI-based solution, consider exploring [solc-select](https://github.com/crytic/solc-select).
 
