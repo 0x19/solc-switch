@@ -19,5 +19,4 @@ jobs:
         
       - name: Run Tests
         run: |
-          make prepare
           make test
