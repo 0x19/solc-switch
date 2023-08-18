@@ -5,5 +5,5 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/0x19/solc-switch)](https://pkg.go.dev/github.com/0x19/solc-switch)
 
-# Concurrent Solidity Compiler Switch
+# Solidity Parallel Compiler in Go
 Concurrent Solc Compiler Switch
