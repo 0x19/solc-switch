@@ -1,10 +1,11 @@
 package solc
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/rand"
+	"math/big"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -248,10 +249,8 @@ func (s *Solc) SyncOne(version *Version) error {
 // Returns:
 // - An error if there's any issue during the download process.
 func (s *Solc) downloadFile(file string, url string) error {
-	rand.Seed(time.Now().UnixNano())
-
 	// Just a bit of the time because we could receive 503 from GitHub so we don't want to spam them
-	time.Sleep(time.Duration((rand.Intn(1001) + 500)) * time.Millisecond)
+	randomDelayBetween500And1500()
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -289,4 +288,14 @@ func (s *Solc) downloadFile(file string, url string) error {
 	}
 
 	return nil
+}
+
+// randomDelayBetween500And1500 sleeps for a random amount of time between 500 and 1500 milliseconds.
+func randomDelayBetween500And1500() {
+	n, err := rand.Int(rand.Reader, big.NewInt(1001))
+	if err != nil {
+		panic(err)
+	}
+	delay := n.Int64() + 500
+	time.Sleep(time.Duration(delay) * time.Millisecond)
 }
