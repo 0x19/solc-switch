@@ -1,0 +1,40 @@
+on: [push]
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+    env:
+      SOLC_SWITCH_GITHUB_TOKEN: ${{ secrets.SOLC_SWITCH_GITHUB_TOKEN }}
+    strategy:
+      fail-fast: false
+      matrix:
+        go:
+          - '1.19'
+
+    steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go }}
+      - uses: actions/checkout@v3
+      - run: make submodules
+
+      - name: Run Coverage Profile
+        run: |
+          make prepare
+          go test -v -coverprofile=profile.cov ./...
+
+      - name: Send coverage
+        uses: shogo82148/actions-goveralls@v1.7.0
+        with:
+          path-to-profile: profile.cov
+          flag-name: Go-${{ matrix.go }}
+          parallel: true
+
+  # notifies that all test jobs are finished.
+  finish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: shogo82148/actions-goveralls@v1.7.0
+        with:
+          parallel-finished: true

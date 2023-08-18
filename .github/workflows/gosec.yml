@@ -1,0 +1,19 @@
+name: Security Scanner
+on: [push]
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    env:
+      SOLC_SWITCH_GITHUB_TOKEN: ${{ secrets.SOLC_SWITCH_GITHUB_TOKEN }}
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v3
+
+      - name: Prepare solidity release binaries
+        run: |
+          make prepare
+
+      - name: Run Gosec Security Scanner
+        uses: securego/gosec@master
+        with:
+          args: ./...
