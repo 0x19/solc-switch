@@ -14,6 +14,10 @@ func (s *Solc) GetLocalReleasesPath() string {
 }
 
 // GetLocalReleases fetches the Solidity versions saved locally in releases.json.
+//
+// Returns:
+// - A slice of Version representing all the fetched Solidity versions.
+// - An error if there's any issue during the fetch process.
 func (s *Solc) GetLocalReleases() ([]Version, error) {
 	data, err := os.ReadFile(s.GetLocalReleasesPath())
 	if err != nil {
@@ -41,11 +45,18 @@ func (s *Solc) GetLocalReleases() ([]Version, error) {
 }
 
 // GetCachedReleases returns the cached releases from memory.
+//
+// Returns:
+// - A slice of Version representing all the cached Solidity versions.
 func (s *Solc) GetCachedReleases() []Version {
 	return s.localReleases
 }
 
 // GetLatestRelease reads the memory cache or local releases.json file and returns the latest Solidity version.
+//
+// Returns:
+// - A pointer to the latest Version.
+// - An error if there's any issue during the fetch process.
 func (s *Solc) GetLatestRelease() (*Version, error) {
 	var versions []Version
 
@@ -68,7 +79,14 @@ func (s *Solc) GetLatestRelease() (*Version, error) {
 	return &versions[0], nil
 }
 
-// GetVersion returns the memory cache or local releases.json file and returns the Solidity version matching the given tag name.
+// GetRelease reads the memory cache or local releases.json file and returns the Solidity version matching the given tag name.
+//
+// Parameters:
+// - tagName: A string representing the tag name of the desired Solidity version.
+//
+// Returns:
+// - A pointer to the matching Version.
+// - An error if there's any issue during the fetch process or if the version is not found.
 func (s *Solc) GetRelease(tagName string) (*Version, error) {
 	var versions []Version
 
@@ -99,6 +117,11 @@ func (s *Solc) GetRelease(tagName string) (*Version, error) {
 	return nil, errors.New("version not found")
 }
 
+// GetReleasesSimplified fetches the Solidity versions saved locally in releases.json and returns a simplified version info.
+//
+// Returns:
+// - A slice of VersionInfo representing the simplified version information.
+// - An error if there's any issue during the fetch process.
 func (s *Solc) GetReleasesSimplified() ([]VersionInfo, error) {
 	var versions []Version
 
@@ -117,6 +140,13 @@ func (s *Solc) GetReleasesSimplified() ([]VersionInfo, error) {
 }
 
 // GetBinary returns the path to the binary of the specified version.
+//
+// Parameters:
+// - version: A string representing the desired Solidity version.
+//
+// Returns:
+// - A string representing the path to the binary.
+// - An error if there's any issue during the fetch process or if the binary is not found.
 func (s *Solc) GetBinary(version string) (string, error) {
 	version = getCleanedVersionTag(version)
 	_, err := s.GetRelease(version)
@@ -140,6 +170,12 @@ func (s *Solc) GetBinary(version string) (string, error) {
 }
 
 // RemoveBinary removes the binary file of the specified version.
+//
+// Parameters:
+// - version: A string representing the Solidity version whose binary should be removed.
+//
+// Returns:
+// - An error if there's any issue during the removal process or if the binary is not found.
 func (s *Solc) RemoveBinary(version string) error {
 	version = getCleanedVersionTag(version)
 	_, err := s.GetRelease(version)

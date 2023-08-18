@@ -15,7 +15,6 @@ func TestValidatePath(t *testing.T) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	// Create a temporary file for testing
 	tempFile, err := os.CreateTemp("", "test")
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)

@@ -4,38 +4,31 @@ package solc
 type Distribution string
 
 // String returns the string representation of the Distribution.
-//
-// Returns:
-// - "windows" if the distribution is Windows.
-// - "macos" if the distribution is MacOS.
-// - "linux" if the distribution is Linux.
-// - "unknown" if the distribution is Unknown or not recognized.
+// Possible return values include:
+// - "windows" for Windows.
+// - "macos" for MacOS.
+// - "linux" for Linux.
+// - "unknown" for unrecognized or unknown distributions.
 func (d Distribution) String() string {
 	return string(d)
 }
 
 const (
-	// Windows represents the Microsoft Windows operating system.
+	// Windows denotes the Microsoft Windows operating system.
 	Windows Distribution = "windows"
 
-	// MacOS represents the Apple macOS operating system.
+	// MacOS denotes the Apple macOS operating system.
 	MacOS Distribution = "darwin"
 
-	// Linux represents the Linux operating system.
+	// Linux denotes the Linux operating system.
 	Linux Distribution = "linux"
 
-	// Unknown represents an unrecognized operating system.
+	// Unknown denotes an unrecognized or unknown operating system.
 	Unknown Distribution = "unknown"
 )
 
 // GetDistribution determines the operating system type on which the code is running.
 // It returns one of the predefined Distribution constants: Windows, MacOS, Linux, or Unknown.
-//
-// Returns:
-// - Windows if the operating system is Microsoft Windows.
-// - MacOS if the operating system is Apple macOS.
-// - Linux if the operating system is Linux.
-// - Unknown if the operating system is not recognized.
 func (s *Solc) GetDistribution() Distribution {
 	switch s.gOOSFunc() {
 	case "windows":
@@ -49,6 +42,13 @@ func (s *Solc) GetDistribution() Distribution {
 	}
 }
 
+// GetDistributionForAsset determines the appropriate asset name based on the operating system.
+// This is useful for fetching the correct compiler binaries or assets.
+// Possible return values include:
+// - "solc-windows" for Windows.
+// - "solc-macos" for MacOS.
+// - "solc-static-linux" for Linux.
+// - "unknown" for unrecognized or unknown distributions.
 func (s *Solc) GetDistributionForAsset() string {
 	switch s.gOOSFunc() {
 	case "windows":

@@ -1,3 +1,4 @@
+// Package solc provides utilities for managing and interacting with the Solidity compiler.
 package solc
 
 import (
@@ -9,10 +10,11 @@ import (
 )
 
 const (
-	// Define a reasonable timeout for the HTTP client.
+	// httpClientTimeout defines a default timeout duration for the HTTP client.
 	httpClientTimeout = 10 * time.Second
 )
 
+// Config represents the configuration settings for solc-switch.
 type Config struct {
 	releasesPath        string
 	releasesUrl         string
@@ -20,6 +22,7 @@ type Config struct {
 	personalAccessToken string
 }
 
+// Validate checks the validity of the configuration settings.
 func (c *Config) Validate() error {
 	if err := validatePath(c.releasesPath); err != nil {
 		return err
@@ -32,6 +35,7 @@ func (c *Config) Validate() error {
 	return nil
 }
 
+// NewDefaultConfig initializes a new Config with default settings.
 func NewDefaultConfig() (*Config, error) {
 	// Get the current file's path
 	_, filename, _, ok := runtime.Caller(0)
@@ -49,6 +53,7 @@ func NewDefaultConfig() (*Config, error) {
 	}, nil
 }
 
+// SetReleasesPath sets the path for the releases.
 func (c *Config) SetReleasesPath(path string) error {
 	if err := validatePath(path); err != nil {
 		return err
@@ -58,18 +63,22 @@ func (c *Config) SetReleasesPath(path string) error {
 	return nil
 }
 
+// GetReleasesPath returns the path where releases are stored.
 func (c *Config) GetReleasesPath() string {
 	return c.releasesPath
 }
 
+// GetReleasesUrl returns the URL from which releases are fetched.
 func (c *Config) GetReleasesUrl() string {
 	return c.releasesUrl
 }
 
+// SetHttpClientTimeout sets the timeout duration for the HTTP client.
 func (c *Config) SetHttpClientTimeout(timeout time.Duration) {
 	c.httpClientTimeout = timeout
 }
 
+// GetHttpClientTimeout returns the timeout duration set for the HTTP client.
 func (c *Config) GetHttpClientTimeout() time.Duration {
 	return c.httpClientTimeout
 }

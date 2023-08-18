@@ -40,8 +40,8 @@ func TestSyncer(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			// We need to set timeout to 5 minutes so we can debug the HTTP requests.
-			tt.config.SetHttpClientTimeout(300 * time.Second)
+			// We need to set timeout to 3 minutes so we can debug the HTTP requests.
+			tt.config.SetHttpClientTimeout(180 * time.Second)
 
 			s, err := New(context.TODO(), tt.config)
 			assert.NoError(t, err)
@@ -86,8 +86,8 @@ func TestSyncOnce(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			// We need to set timeout to 5 minutes so we can debug the HTTP requests.
-			tt.config.SetHttpClientTimeout(300 * time.Second)
+			// We need to set timeout to 1.5 minutes so we can debug the HTTP requests.
+			tt.config.SetHttpClientTimeout(90 * time.Second)
 
 			s, err := New(context.TODO(), tt.config)
 			assert.NoError(t, err)

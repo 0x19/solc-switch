@@ -20,6 +20,9 @@ While **solc-switch** is lightweight, fast, and intuitive, it's primarily tailor
 
 📢 **Note for Windows Enthusiasts:** Testing on a Windows environment hasn't been done yet. If you're a Windows user, your feedback on its functionality would be invaluable. If you're passionate about contributing, your PRs are more than welcome!
 
+## Documentation
+
+For a comprehensive overview of `solc-switch`, its functions, and detailed usage instructions, please refer to the [official documentation](https://pkg.go.dev/github.com/0x19/solc-switch).
 
 ## Installation
 
@@ -129,9 +132,9 @@ func main() {
 
 ### Compilation Results
 
-**Requested Compiler Version:** 0.8.0
-**Compiler Version:** 0.8.0+commit.c7dfd78e.Linux.g++
-**Contract Name:** SimpleStorage
+- **Requested Compiler Version:** 0.8.0
+- **Compiler Version:** 0.8.0+commit.c7dfd78e.Linux.g++
+- **Contract Name:** SimpleStorage
 
 ```shell
 (*solc.CompilerResults)(0xc0002faa80)({

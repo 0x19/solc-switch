@@ -42,6 +42,12 @@ func validatePath(path string) error {
 }
 
 // getCleanedVersionTag removes the "v" prefix from a version tag.
+//
+// Parameters:
+// - versionTag: A string representing the version tag to be cleaned.
+//
+// Returns:
+// - A string representing the cleaned version tag.
 func getCleanedVersionTag(versionTag string) string {
 	return strings.ReplaceAll(versionTag, "v", "")
 }

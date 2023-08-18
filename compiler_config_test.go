@@ -113,12 +113,10 @@ func TestCompilerConfigVersion(t *testing.T) {
 func TestConfigFunctions(t *testing.T) {
 	config := &CompilerConfig{Arguments: []string{"--json"}}
 
-	// Test SetArguments
 	newArgs := []string{"-"}
 	config.SetArguments(newArgs)
 	assert.Equal(t, config.GetArguments(), newArgs)
 
-	// Test AppendArguments
 	appendArgs := []string{"--json"}
 	config.AppendArguments(appendArgs...)
 	assert.Equal(t, config.GetArguments(), []string{"-", "--json"})

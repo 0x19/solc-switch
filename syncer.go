@@ -14,7 +14,11 @@ import (
 	"go.uber.org/zap"
 )
 
-// SyncReleases fetches the available Solidity versions from GitHub and saves them to releases.json and reloads local cache
+// SyncReleases fetches the available Solidity versions from GitHub, saves them to releases.json, and reloads the local cache.
+//
+// Returns:
+// - A slice of Version representing all the fetched Solidity versions.
+// - An error if there's any issue during the synchronization process.
 func (s *Solc) SyncReleases() ([]Version, error) {
 	var allVersions []Version
 	page := 1
@@ -55,7 +59,6 @@ func (s *Solc) SyncReleases() ([]Version, error) {
 		page++
 	}
 
-	// Save all versions to releases.json
 	allVersionsBytes, err := json.Marshal(allVersions)
 	if err != nil {
 		return nil, err
@@ -69,7 +72,14 @@ func (s *Solc) SyncReleases() ([]Version, error) {
 	return allVersions, nil
 }
 
-// SyncBinaries downloads all the binaries for the distribution in parallel.
+// SyncBinaries downloads all the binaries for the specified versions in parallel.
+//
+// Parameters:
+// - versions: A slice of Version representing the Solidity versions for which binaries should be downloaded.
+// - limitVersion: A string representing a specific version to limit the download to. If empty, binaries for all versions will be downloaded.
+//
+// Returns:
+// - An error if there's any issue during the download process.
 func (s *Solc) SyncBinaries(versions []Version, limitVersion string) error {
 	var wg sync.WaitGroup
 	errorsCh := make(chan error, len(versions))
@@ -169,8 +179,11 @@ func (s *Solc) SyncBinaries(versions []Version, limitVersion string) error {
 	return nil
 }
 
-// Sync fetches the available Solidity versions from GitHub and saves them to releases.json and reloads local cache
-// and downloads all the binaries for the distribution for future use...
+// Sync fetches the available Solidity versions from GitHub, saves them to releases.json, reloads the local cache,
+// and downloads all the binaries for the distribution for future use.
+//
+// Returns:
+// - An error if there's any issue during the synchronization process.
 func (s *Solc) Sync() error {
 	versions, err := s.SyncReleases()
 	if err != nil {
@@ -186,8 +199,14 @@ func (s *Solc) Sync() error {
 	return nil
 }
 
-// Sync fetches specific Solidity version from GitHub and saves them to releases.json and reloads local cache
-// and downloads all the binaries for the distribution for future use...
+// SyncOne fetches a specific Solidity version from GitHub, saves it to releases.json, reloads the local cache,
+// and downloads the binary for the distribution for future use.
+//
+// Parameters:
+// - version: A pointer to a Version representing the specific Solidity version to be synchronized.
+//
+// Returns:
+// - An error if there's any issue during the synchronization process.
 func (s *Solc) SyncOne(version *Version) error {
 	if version == nil {
 		return fmt.Errorf("version must be provided to synchronize one version")
@@ -210,7 +229,14 @@ func (s *Solc) SyncOne(version *Version) error {
 	return nil
 }
 
-// downloadFile downloads a file from the given URL and saves it to the specified path.
+// downloadFile downloads a file from the provided URL and saves it to the specified path.
+//
+// Parameters:
+// - filepath: A string representing the path where the downloaded file should be saved.
+// - url: A string representing the URL from which the file should be downloaded.
+//
+// Returns:
+// - An error if there's any issue during the download process.
 func (s *Solc) downloadFile(filepath string, url string) error {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
