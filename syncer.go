@@ -130,6 +130,8 @@ func (s *Solc) SyncBinaries(versions []Version, limitVersion string) error {
 							errorsCh <- fmt.Errorf("context cancelled")
 							return
 						default:
+							// Give it a second to avoid rate limiting and other issues
+							time.Sleep(1 * time.Second)
 							err := s.downloadFile(fName, a.BrowserDownloadURL)
 							if err != nil {
 								errorsCh <- fmt.Errorf("error downloading binary for version %s: %v", getCleanedVersionTag(v.TagName), err)
@@ -266,7 +268,7 @@ func (s *Solc) downloadFile(filepath string, url string) error {
 		return err
 	}
 
-	if err := os.Chmod(filepath, 0700); err != nil {
+	if err := os.Chmod(filepath, 0755); err != nil {
 		return fmt.Errorf("failed to set file as executable: %v", err)
 	}
 

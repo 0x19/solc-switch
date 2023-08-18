@@ -20,6 +20,7 @@ jobs:
 
       - name: Run Coverage Profile
         run: |
+          make prepare
           go test -v -coverprofile=profile.cov ./...
 
       - name: Send coverage

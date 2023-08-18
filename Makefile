@@ -25,6 +25,10 @@ generate: submodules ## Run tests
 benchmark: ## Run benchmarks
 	go test -v -bench . -benchmem ./... > benchmark.txt
 
+.PHONY: prepare
+prepare: ## Ensure releases binaries are executable
+	chmod +x ./releases/solc-*
+
 .PHONY: submodules
 submodules: ## Update submodules
 	git submodule update --init --recursive
