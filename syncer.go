@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -122,6 +123,10 @@ func (s *Solc) SyncBinaries(versions []Version, limitVersion string) error {
 					)
 
 					wg.Add(1)
+
+					// Just a bit of the time because we could receive 503 from GitHub so we don't want to spam them
+					time.Sleep(100 * time.Millisecond)
+
 					go func(v Version, a Asset, fName string) {
 						defer wg.Done()
 						select {
@@ -135,8 +140,6 @@ func (s *Solc) SyncBinaries(versions []Version, limitVersion string) error {
 							errorsCh <- fmt.Errorf("context cancelled")
 							return
 						default:
-							// Give it a second to avoid rate limiting and other issues
-							time.Sleep(1 * time.Second)
 							err := s.downloadFile(fName, a.BrowserDownloadURL)
 							if err != nil {
 								errorsCh <- fmt.Errorf("error downloading binary for version %s: %v", getCleanedVersionTag(v.TagName), err)
@@ -245,6 +248,11 @@ func (s *Solc) SyncOne(version *Version) error {
 // Returns:
 // - An error if there's any issue during the download process.
 func (s *Solc) downloadFile(file string, url string) error {
+	rand.Seed(time.Now().UnixNano())
+
+	// Just a bit of the time because we could receive 503 from GitHub so we don't want to spam them
+	time.Sleep(time.Duration((rand.Intn(1001) + 500)) * time.Millisecond)
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return err
