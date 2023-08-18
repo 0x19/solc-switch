@@ -40,10 +40,15 @@ func (s *Solc) SyncReleases() ([]Version, error) {
 
 		bodyBytes, err := io.ReadAll(resp.Body)
 		if err != nil {
-			resp.Body.Close()
+			if err := resp.Body.Close(); err != nil {
+				return nil, err
+			}
 			return nil, err
 		}
-		resp.Body.Close()
+
+		if err := resp.Body.Close(); err != nil {
+			return nil, err
+		}
 
 		var versions []Version
 		if err := json.Unmarshal(bodyBytes, &versions); err != nil {
@@ -239,7 +244,7 @@ func (s *Solc) SyncOne(version *Version) error {
 //
 // Returns:
 // - An error if there's any issue during the download process.
-func (s *Solc) downloadFile(filepath string, url string) error {
+func (s *Solc) downloadFile(file string, url string) error {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return err
@@ -258,7 +263,7 @@ func (s *Solc) downloadFile(filepath string, url string) error {
 		return fmt.Errorf("failed to download file: %s", resp.Status)
 	}
 
-	out, err := os.Create(filepath)
+	out, err := os.Create(filepath.Clean(file))
 	if err != nil {
 		return err
 	}
@@ -268,7 +273,10 @@ func (s *Solc) downloadFile(filepath string, url string) error {
 		return err
 	}
 
-	if err := os.Chmod(filepath, 0755); err != nil {
+	// #nosec G302
+	// G302 (CWE-276): Expect file permissions to be 0600 or less (Confidence: HIGH, Severity: MEDIUM)
+	// We want executable files to be executable by the user running the program so we can't use 0600.
+	if err := os.Chmod(file, 0755); err != nil {
 		return fmt.Errorf("failed to set file as executable: %v", err)
 	}
 

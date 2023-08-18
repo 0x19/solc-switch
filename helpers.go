@@ -3,6 +3,7 @@ package solc
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -32,11 +33,14 @@ func validatePath(path string) error {
 		return fmt.Errorf("path is not a directory: %s", path)
 	}
 
-	file, err := os.Open(path)
+	file, err := os.Open(filepath.Clean(path))
 	if err != nil {
 		return fmt.Errorf("directory is not readable: %s", path)
 	}
-	file.Close()
+
+	if err := file.Close(); err != nil {
+		return err
+	}
 
 	return nil
 }
