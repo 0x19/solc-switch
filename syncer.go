@@ -276,7 +276,7 @@ func (s *Solc) downloadFile(file string, url string) error {
 	// #nosec G302
 	// G302 (CWE-276): Expect file permissions to be 0600 or less (Confidence: HIGH, Severity: MEDIUM)
 	// We want executable files to be executable by the user running the program so we can't use 0600.
-	if err := os.Chmod(file, 0755); err != nil {
+	if err := os.Chmod(file, 0777); err != nil {
 		return fmt.Errorf("failed to set file as executable: %v", err)
 	}
 
