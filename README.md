@@ -17,7 +17,7 @@ While **solc-switch** is lightweight, fast, and intuitive, it's primarily tailor
 
 ## Highlighted Features
 
-- **Speedy Downloads:** Parallel downloading of multiple Solidity compiler versions ensures you're not waiting around. In fact, all releases are already pre-downloaded for you. You can see them in [releases](./releases/) directory.
+- **Speedy Downloads:** Parallel downloading of multiple Solidity compiler versions ensures you're not waiting around.
 - **Smooth Version Switching:** Navigate between different Solidity compiler versions without a hitch.
 - **Always in the Loop:** With automatic updates, always have access to the latest releases from the official Solidity GitHub repository.
 - **Broad Compatibility:** Crafted with MacOS and Linux in mind, and potentially adaptable for Windows.
