@@ -3,6 +3,7 @@ package solc
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -71,6 +72,8 @@ func (s *Solc) GetLatestRelease() (*Version, error) {
 func (s *Solc) GetRelease(tagName string) (*Version, error) {
 	var versions []Version
 
+	tagName = getCleanedVersionTag(tagName)
+
 	if s.GetCachedReleases() == nil {
 		localReleases, err := s.GetLocalReleases()
 		if err != nil {
@@ -83,12 +86,12 @@ func (s *Solc) GetRelease(tagName string) (*Version, error) {
 
 	// Check if there are any versions available
 	if len(versions) == 0 {
-		return nil, errors.New("no versions found in releases.json")
+		return nil, errors.New("no versions found in available releases")
 	}
 
 	// Find the version matching the given tag name
 	for _, version := range versions {
-		if version.TagName == tagName {
+		if getCleanedVersionTag(version.TagName) == tagName {
 			return &version, nil
 		}
 	}
@@ -111,4 +114,54 @@ func (s *Solc) GetReleasesSimplified() ([]VersionInfo, error) {
 	}
 
 	return versionsInfo, nil
+}
+
+// GetBinary returns the path to the binary of the specified version.
+func (s *Solc) GetBinary(version string) (string, error) {
+	version = getCleanedVersionTag(version)
+	_, err := s.GetRelease(version)
+	if err != nil {
+		return "", err
+	}
+
+	filename := fmt.Sprintf("solc-%s", version)
+	distribution := s.GetDistributionForAsset()
+	if distribution == "solc-windows" {
+		filename += ".exe"
+	}
+
+	binaryPath := filepath.Join(s.config.GetReleasesPath(), filename)
+
+	if _, err := os.Stat(binaryPath); os.IsNotExist(err) {
+		return "", fmt.Errorf("binary for version %s not found", version)
+	}
+
+	return binaryPath, nil
+}
+
+// RemoveBinary removes the binary file of the specified version.
+func (s *Solc) RemoveBinary(version string) error {
+	version = getCleanedVersionTag(version)
+	_, err := s.GetRelease(version)
+	if err != nil {
+		return err
+	}
+
+	filename := fmt.Sprintf("solc-%s", version)
+	distribution := s.GetDistributionForAsset()
+	if distribution == "solc-windows" {
+		filename += ".exe"
+	}
+
+	binaryPath := filepath.Join(s.config.GetReleasesPath(), filename)
+
+	if _, err := os.Stat(binaryPath); os.IsNotExist(err) {
+		return fmt.Errorf("binary for version %s not found", version)
+	}
+
+	if err := os.Remove(binaryPath); err != nil {
+		return err
+	}
+
+	return nil
 }

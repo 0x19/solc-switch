@@ -188,13 +188,20 @@ func (s *Solc) Sync() error {
 
 // Sync fetches specific Solidity version from GitHub and saves them to releases.json and reloads local cache
 // and downloads all the binaries for the distribution for future use...
-func (s *Solc) SyncOne(version Version) error {
+func (s *Solc) SyncOne(version *Version) error {
+	if version == nil {
+		return fmt.Errorf("version must be provided to synchronize one version")
+	}
+
 	versions, err := s.SyncReleases()
 	if err != nil {
 		return err
 	}
 
-	zap.L().Debug("Syncing solc binaries...", zap.Int("versions_count", len(versions)))
+	zap.L().Debug(
+		"Attempt to synchronize solc release", zap.Int("versions_count", len(versions)),
+		zap.String("version", getCleanedVersionTag(version.TagName)),
+	)
 
 	if err := s.SyncBinaries(versions, version.TagName); err != nil {
 		return err
@@ -229,6 +236,13 @@ func (s *Solc) downloadFile(filepath string, url string) error {
 	}
 	defer out.Close()
 
-	_, err = io.Copy(out, resp.Body)
-	return err
+	if _, err = io.Copy(out, resp.Body); err != nil {
+		return err
+	}
+
+	if err := os.Chmod(filepath, 0700); err != nil {
+		return fmt.Errorf("failed to set file as executable: %v", err)
+	}
+
+	return nil
 }

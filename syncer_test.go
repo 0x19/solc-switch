@@ -57,3 +57,57 @@ func TestSyncer(t *testing.T) {
 		})
 	}
 }
+
+func TestSyncOnce(t *testing.T) {
+	logger, err := GetDevelopmentLogger(zapcore.DebugLevel)
+	assert.NoError(t, err)
+	assert.NotNil(t, logger)
+	zap.ReplaceGlobals(logger)
+
+	tests := []struct {
+		name         string
+		releasesPath string
+		expectedGOOS string
+		config       *Config
+		wantSyncErr  bool
+	}{
+		{
+			name:         "Download Binaries Successfully",
+			expectedGOOS: runtime.GOOS,
+			config: func() *Config {
+				config, err := NewDefaultConfig()
+				assert.NoError(t, err)
+				assert.NotNil(t, config)
+				return config
+			}(),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			// We need to set timeout to 5 minutes so we can debug the HTTP requests.
+			tt.config.SetHttpClientTimeout(300 * time.Second)
+
+			s, err := New(context.TODO(), tt.config)
+			assert.NoError(t, err)
+			assert.NotNil(t, s)
+
+			latestRelease, err := s.GetLatestRelease()
+			assert.NoError(t, err)
+			assert.NotNil(t, latestRelease)
+
+			// Remove release from path so we can test the SyncOne method.
+			err = s.RemoveBinary(latestRelease.TagName)
+			assert.NoError(t, err)
+
+			err = s.SyncOne(latestRelease)
+			if tt.wantSyncErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+
+		})
+	}
+}

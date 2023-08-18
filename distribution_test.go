@@ -62,3 +62,47 @@ func TestGetDistribution(t *testing.T) {
 		})
 	}
 }
+
+func TestGetDistributionForAsset(t *testing.T) {
+	tests := []struct {
+		name     string
+		goos     string
+		expected string
+	}{
+		{
+			name:     "Windows OS Asset",
+			goos:     "windows",
+			expected: "solc-windows",
+		},
+		{
+			name:     "MacOS Asset",
+			goos:     "darwin",
+			expected: "solc-macos",
+		},
+		{
+			name:     "Linux OS Asset",
+			goos:     "linux",
+			expected: "solc-static-linux",
+		},
+		{
+			name:     "Unknown OS Asset",
+			goos:     "solaris", // Just an example of an OS that's not in our main switch case
+			expected: "unknown",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config, err := NewDefaultConfig()
+			assert.NoError(t, err)
+			assert.NotNil(t, config)
+
+			s, err := New(context.TODO(), config)
+			assert.NoError(t, err)
+			assert.NotNil(t, s)
+
+			s.gOOSFunc = func() string { return tt.goos }
+			assert.Equal(t, tt.expected, s.GetDistributionForAsset())
+		})
+	}
+}

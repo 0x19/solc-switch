@@ -45,3 +45,17 @@ func (s *Solc) GetConfig() *Config {
 func (s *Solc) GetHTTPClient() *http.Client {
 	return s.client
 }
+
+func (s *Solc) Compile(ctx context.Context, source string, config *CompilerConfig) (*CompilerResults, error) {
+	compiler, err := NewCompiler(ctx, s, config, source)
+	if err != nil {
+		return nil, err
+	}
+
+	compilerResults, err := compiler.Compile()
+	if err != nil {
+		return nil, err
+	}
+
+	return compilerResults, nil
+}
