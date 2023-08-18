@@ -11,6 +11,10 @@
 
 While **solc-switch** is lightweight, fast, and intuitive, it's primarily tailored for APIs and other tool integrations. It's not primarily intended for direct end-user interactions. If you're on the hunt for a CLI-based solution, consider exploring [solc-select](https://github.com/crytic/solc-select).
 
+## Under the Hood: Execution Mechanics
+
+**solc-switch** makes use of the `os/exec` package to carry out compilation commands. This method is direct and gets the job done, but it's worth mentioning that it may not always be the best fit for every situation. I've thought about leveraging **CGO** to directly incorporate the C++ code of the Solidity compiler. But when I considered the challenges of handling over 100 Solidity releases and the nuances of build time, it became clear that this route might be a bit too ambitious and not necessarily beneficial. My main aim is to strike a balance between efficiency, ease of maintenance, and user experience.
+
 ## Highlighted Features
 
 - **Speedy Downloads:** Parallel downloading of multiple Solidity compiler versions ensures you're not waiting around. In fact, all releases are already pre-downloaded for you. You can see them in [releases](./releases/) directory.
