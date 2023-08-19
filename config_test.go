@@ -62,7 +62,7 @@ func TestConfig_SetReleasesPath(t *testing.T) {
 	}{
 		{
 			name:    "valid path",
-			path:    "/valid/path",
+			path:    "./releases",
 			wantErr: false,
 		},
 		{
