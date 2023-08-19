@@ -16,8 +16,8 @@ func TestConfig_Validate(t *testing.T) {
 		{
 			name: "valid config",
 			config: &Config{
-				releasesPath:      "/valid/path",
-				releasesUrl:       "https://valid.url",
+				releasesPath:      "./releases",
+				releasesUrl:       "https://api.github.com/repos/ethereum/solidity/releases",
 				httpClientTimeout: 10 * time.Second,
 			},
 			wantErr: false,
