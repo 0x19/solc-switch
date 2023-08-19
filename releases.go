@@ -21,17 +21,6 @@ func (s *Solc) GetLocalReleasesPath() string {
 func (s *Solc) GetLocalReleases() ([]Version, error) {
 	data, err := os.ReadFile(s.GetLocalReleasesPath())
 	if err != nil {
-
-		// If the file does not exist, fetch the available releases from GitHub
-		if errors.Is(err, os.ErrNotExist) {
-			releases, err := s.SyncReleases()
-			if err != nil {
-				return nil, err
-			}
-			s.localReleases = releases
-			return releases, nil
-		}
-
 		return nil, err
 	}
 

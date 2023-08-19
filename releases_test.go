@@ -152,3 +152,24 @@ func TestAvailableVersions(t *testing.T) {
 		})
 	}
 }
+
+func TestInvalidLocalReleasesPath(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "test")
+	assert.NoError(t, err)
+	assert.NotEmpty(t, tempDir)
+	defer os.RemoveAll(tempDir)
+
+	config, err := NewDefaultConfig()
+	assert.NoError(t, err)
+	assert.NotNil(t, config)
+
+	err = config.SetReleasesPath(tempDir)
+	assert.NoError(t, err)
+
+	solc, err := New(context.TODO(), config)
+	assert.NoError(t, err)
+	assert.NotNil(t, solc)
+
+	_, err = solc.GetLocalReleases()
+	assert.Error(t, err)
+}
