@@ -22,6 +22,14 @@ func TestValidatePath(t *testing.T) {
 	tempFile.Close()
 	defer os.Remove(tempFile.Name())
 
+	// Create a directory with no read permissions
+	unreadableDir, err := os.MkdirTemp("", "test_unreadable")
+	if err != nil {
+		t.Fatalf("Failed to create unreadable directory: %v", err)
+	}
+	defer os.RemoveAll(unreadableDir)
+	os.Chmod(unreadableDir, 0222) // Write-only permissions
+
 	tests := []struct {
 		name    string
 		path    string
@@ -41,6 +49,11 @@ func TestValidatePath(t *testing.T) {
 			name:    "Path is a File",
 			path:    tempFile.Name(),
 			wantErr: "path is not a directory",
+		},
+		{
+			name:    "Unreadable Directory",
+			path:    unreadableDir,
+			wantErr: "directory is not readable",
 		},
 	}
 
