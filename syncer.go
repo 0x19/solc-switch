@@ -25,6 +25,12 @@ func (s *Solc) SyncReleases() ([]Version, error) {
 	var allVersions []Version
 	page := 1
 
+	// Sync maximum 4 times per day in order to increase the speed of the sync process when there's really
+	// no need to sync more often than that.
+	if time.Since(s.lastSync) < time.Duration(6*time.Hour) {
+		return s.localReleases, nil
+	}
+
 	for {
 		url := fmt.Sprintf("%s?page=%d", s.config.GetReleasesUrl(), page)
 		req, err := http.NewRequest("GET", url, nil)
@@ -76,6 +82,7 @@ func (s *Solc) SyncReleases() ([]Version, error) {
 	}
 
 	s.localReleases = allVersions
+	s.lastSync = time.Now()
 	return allVersions, nil
 }
 
@@ -108,16 +115,10 @@ func (s *Solc) SyncBinaries(versions []Version, limitVersion string) error {
 					filename += ".exe"
 				}
 
-				zap.L().Debug(
-					"Checking if solc asset needs to be downloaded",
-					zap.String("version", versionTag),
-					zap.String("asset_name", asset.Name),
-				)
-
 				if _, err := os.Stat(filename); os.IsNotExist(err) {
 					totalDownloads++
 					zap.L().Debug(
-						"Downloading solc asset",
+						"Downloading solc release",
 						zap.String("version", versionTag),
 						zap.String("asset_name", asset.Name),
 						zap.String("asset_local_filename", filepath.Base(filename)),
