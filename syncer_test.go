@@ -54,6 +54,7 @@ func TestSyncer(t *testing.T) {
 				assert.NoError(t, err)
 			}
 
+			assert.NotNil(t, s.LastSyncTime())
 		})
 	}
 }
@@ -108,6 +109,7 @@ func TestSyncOnce(t *testing.T) {
 				assert.NoError(t, err)
 			}
 
+			assert.NotNil(t, s.LastSyncTime())
 		})
 	}
 }
