@@ -172,6 +172,16 @@ func TestCompiler(t *testing.T) {
 			solc: solc,
 			sync: false,
 		},
+		{
+			name:           "Invalid Compiler config",
+			wantErr:        true,
+			wantCompileErr: true,
+			compilerConfig: func() *CompilerConfig {
+				return nil
+			}(),
+			solc: solc,
+			sync: false,
+		},
 	}
 
 	for _, testCase := range testCases {
