@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"runtime"
+	"time"
 )
 
 // Solc represents the main structure for interacting with the Solidity compiler.
@@ -15,10 +16,10 @@ type Solc struct {
 	client        *http.Client
 	gOOSFunc      func() string
 	localReleases []Version
+	lastSync      time.Time
 }
 
 // New initializes and returns a new instance of the Solc structure.
-// It requires a context and a configuration to be provided.
 func New(ctx context.Context, config *Config) (*Solc, error) {
 	if config == nil {
 		return nil, fmt.Errorf("config needs to be provided")
@@ -41,6 +42,11 @@ func New(ctx context.Context, config *Config) (*Solc, error) {
 // GetContext retrieves the context associated with the Solc instance.
 func (s *Solc) GetContext() context.Context {
 	return s.ctx
+}
+
+// LastSyncTime retrieves the last time the Solc instance was synced.
+func (s *Solc) LastSyncTime() time.Time {
+	return s.lastSync
 }
 
 // GetConfig retrieves the configuration associated with the Solc instance.

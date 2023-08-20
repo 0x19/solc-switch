@@ -21,6 +21,12 @@ func (s *Solc) SyncReleases() ([]Version, error) {
 	var allVersions []Version
 	page := 1
 
+	// Sync maximum 4 times per day in order to increase the speed of the sync process when there's really
+	// no need to sync more often than that.
+	if time.Since(s.lastSync) < time.Duration(6*time.Hour) {
+		return s.localReleases, nil
+	}
+
 	for {
 		url := fmt.Sprintf("%s?page=%d", s.config.GetReleasesUrl(), page)
 		req, err := http.NewRequest("GET", url, nil)
@@ -72,6 +78,7 @@ func (s *Solc) SyncReleases() ([]Version, error) {
 	}
 
 	s.localReleases = allVersions
+	s.lastSync = time.Now()
 	return allVersions, nil
 }
 
