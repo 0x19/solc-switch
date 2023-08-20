@@ -17,10 +17,6 @@ import (
 )
 
 // SyncReleases fetches the available Solidity versions from GitHub, saves them to releases.json, and reloads the local cache.
-//
-// Returns:
-// - A slice of Version representing all the fetched Solidity versions.
-// - An error if there's any issue during the synchronization process.
 func (s *Solc) SyncReleases() ([]Version, error) {
 	var allVersions []Version
 	page := 1
@@ -80,13 +76,6 @@ func (s *Solc) SyncReleases() ([]Version, error) {
 }
 
 // SyncBinaries downloads all the binaries for the specified versions in parallel.
-//
-// Parameters:
-// - versions: A slice of Version representing the Solidity versions for which binaries should be downloaded.
-// - limitVersion: A string representing a specific version to limit the download to. If empty, binaries for all versions will be downloaded.
-//
-// Returns:
-// - An error if there's any issue during the download process.
 func (s *Solc) SyncBinaries(versions []Version, limitVersion string) error {
 	var wg sync.WaitGroup
 	errorsCh := make(chan error, len(versions))
@@ -108,16 +97,10 @@ func (s *Solc) SyncBinaries(versions []Version, limitVersion string) error {
 					filename += ".exe"
 				}
 
-				zap.L().Debug(
-					"Checking if solc asset needs to be downloaded",
-					zap.String("version", versionTag),
-					zap.String("asset_name", asset.Name),
-				)
-
 				if _, err := os.Stat(filename); os.IsNotExist(err) {
 					totalDownloads++
-					zap.L().Debug(
-						"Downloading solc asset",
+					zap.L().Info(
+						"Downloading missing solc release",
 						zap.String("version", versionTag),
 						zap.String("asset_name", asset.Name),
 						zap.String("asset_local_filename", filepath.Base(filename)),
@@ -192,9 +175,6 @@ func (s *Solc) SyncBinaries(versions []Version, limitVersion string) error {
 
 // Sync fetches the available Solidity versions from GitHub, saves them to releases.json, reloads the local cache,
 // and downloads all the binaries for the distribution for future use.
-//
-// Returns:
-// - An error if there's any issue during the synchronization process.
 func (s *Solc) Sync() error {
 	versions, err := s.SyncReleases()
 	if err != nil {
@@ -212,12 +192,6 @@ func (s *Solc) Sync() error {
 
 // SyncOne fetches a specific Solidity version from GitHub, saves it to releases.json, reloads the local cache,
 // and downloads the binary for the distribution for future use.
-//
-// Parameters:
-// - version: A pointer to a Version representing the specific Solidity version to be synchronized.
-//
-// Returns:
-// - An error if there's any issue during the synchronization process.
 func (s *Solc) SyncOne(version *Version) error {
 	if version == nil {
 		return fmt.Errorf("version must be provided to synchronize one version")
@@ -241,13 +215,6 @@ func (s *Solc) SyncOne(version *Version) error {
 }
 
 // downloadFile downloads a file from the provided URL and saves it to the specified path.
-//
-// Parameters:
-// - filepath: A string representing the path where the downloaded file should be saved.
-// - url: A string representing the URL from which the file should be downloaded.
-//
-// Returns:
-// - An error if there's any issue during the download process.
 func (s *Solc) downloadFile(file string, url string) error {
 	// Just a bit of the time because we could receive 503 from GitHub so we don't want to spam them
 	randomDelayBetween500And1500()
@@ -283,7 +250,7 @@ func (s *Solc) downloadFile(file string, url string) error {
 	// #nosec G302
 	// G302 (CWE-276): Expect file permissions to be 0600 or less (Confidence: HIGH, Severity: MEDIUM)
 	// We want executable files to be executable by the user running the program so we can't use 0600.
-	if err := os.Chmod(file, 0777); err != nil {
+	if err := os.Chmod(file, 0700); err != nil {
 		return fmt.Errorf("failed to set file as executable: %v", err)
 	}
 

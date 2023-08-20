@@ -11,7 +11,7 @@ import (
 )
 
 func TestSolc(t *testing.T) {
-	logger, err := GetProductionLogger()
+	logger, err := GetProductionLogger(zap.InfoLevel)
 	assert.NoError(t, err)
 	assert.NotNil(t, logger)
 	zap.ReplaceGlobals(logger)
