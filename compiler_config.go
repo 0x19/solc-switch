@@ -15,6 +15,7 @@ var allowedArgs = map[string]bool{
 	"--evm-version":   true,
 	"--overwrite":     true,
 	"--libraries":     true,
+	"--standard-json": true,
 }
 
 // requiredArgs defines a list of required arguments for solc.
@@ -26,8 +27,10 @@ var requiredArgs = map[string]bool{
 
 // CompilerConfig represents the compiler configuration for the solc binaries.
 type CompilerConfig struct {
-	CompilerVersion string   // The version of the compiler to use.
-	Arguments       []string // Arguments to pass to the solc tool.
+	CompilerVersion string              // The version of the compiler to use.
+	EntrySourceName string              // The name of the entry source file.
+	Arguments       []string            // Arguments to pass to the solc tool.
+	JsonConfig      *CompilerJsonConfig // The json config to pass to the solc tool.
 }
 
 // NewDefaultCompilerConfig creates and returns a default CompilerConfiguration for compiler to use.
@@ -48,6 +51,48 @@ func NewDefaultCompilerConfig(compilerVersion string) (*CompilerConfig, error) {
 	}
 
 	return toReturn, nil
+}
+
+// NewDefaultCompilerConfig creates and returns a default CompilerConfiguration for compiler to use with provided JSON settings.
+func NewCompilerConfigFromJSON(compilerVersion string, entrySourceName string, config *CompilerJsonConfig) (*CompilerConfig, error) {
+	toReturn := &CompilerConfig{
+		EntrySourceName: entrySourceName,
+		CompilerVersion: compilerVersion,
+		Arguments: []string{
+			"--standard-json", // Output to stdout.
+		},
+		JsonConfig: config,
+	}
+
+	if _, err := toReturn.SanitizeArguments(toReturn.Arguments); err != nil {
+		return nil, err
+	}
+
+	/* 	if err := toReturn.Validate(); err != nil {
+		return nil, err
+	} */
+
+	return toReturn, nil
+}
+
+// SetJsonConfig sets the json config to pass to the solc tool.
+func (c *CompilerConfig) SetJsonConfig(config *CompilerJsonConfig) {
+	c.JsonConfig = config
+}
+
+// GetJsonConfig returns the json config to pass to the solc tool.
+func (c *CompilerConfig) GetJsonConfig() *CompilerJsonConfig {
+	return c.JsonConfig
+}
+
+// SetEntrySourceName sets the name of the entry source file.
+func (c *CompilerConfig) SetEntrySourceName(name string) {
+	c.EntrySourceName = name
+}
+
+// GetEntrySourceName returns the name of the entry source file.
+func (c *CompilerConfig) GetEntrySourceName() string {
+	return c.EntrySourceName
 }
 
 // SetCompilerVersion sets the version of the solc compiler to use.
