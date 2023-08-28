@@ -185,6 +185,11 @@ func (s *Solc) SyncBinaries(versions []Version, limitVersion string) error {
 	return nil
 }
 
+// IsSynced checks if the local cache is synced with the remote releases.
+func (s *Solc) IsSynced() bool {
+	return time.Since(s.lastSync) < time.Duration(6*time.Hour)
+}
+
 // Sync fetches the available Solidity versions from GitHub, saves them to releases.json, reloads the local cache,
 // and downloads all the binaries for the distribution for future use.
 func (s *Solc) Sync() error {

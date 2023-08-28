@@ -60,7 +60,7 @@ func (s *Solc) GetHTTPClient() *http.Client {
 }
 
 // Compile compiles the provided Solidity source code using the specified compiler configuration.
-func (s *Solc) Compile(ctx context.Context, source string, config *CompilerConfig) ([]*CompilerResults, error) {
+func (s *Solc) Compile(ctx context.Context, source string, config *CompilerConfig) (*CompilerResults, error) {
 	compiler, err := NewCompiler(ctx, s, config, source)
 	if err != nil {
 		return nil, err

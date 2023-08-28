@@ -70,7 +70,7 @@ func (v *Compiler) GetSources() string {
 
 // Compile compiles the Solidity sources using the configured compiler version and arguments.
 // It returns the compilation results or an error if the compilation fails.
-func (v *Compiler) Compile() ([]*CompilerResults, error) {
+func (v *Compiler) Compile() (*CompilerResults, error) {
 	compilerVersion := v.GetCompilerVersion()
 	if compilerVersion == "" {
 		return nil, fmt.Errorf("no compiler version specified")
@@ -125,12 +125,12 @@ func (v *Compiler) Compile() ([]*CompilerResults, error) {
 		}
 
 		// Construct the CompilerResults structure with errors and warnings.
-		results := &CompilerResults{
+		results := &CompilerResult{
 			RequestedVersion: compilerVersion,
 			Errors:           errors,
 			Warnings:         warnings,
 		}
-		return []*CompilerResults{results}, err
+		return &CompilerResults{Results: []*CompilerResult{results}}, err
 	}
 
 	if v.config.JsonConfig != nil {
@@ -143,7 +143,7 @@ func (v *Compiler) Compile() ([]*CompilerResults, error) {
 // resultsFromSimple parses the output from the solc compiler when the output is in a simple format.
 // It extracts the compilation details such as bytecode, ABI, and any errors or warnings.
 // The method returns a slice of CompilerResults or an error if the output cannot be parsed.
-func (v *Compiler) resultsFromSimple(compilerVersion string, out bytes.Buffer) ([]*CompilerResults, error) {
+func (v *Compiler) resultsFromSimple(compilerVersion string, out bytes.Buffer) (*CompilerResults, error) {
 	// Parse the output
 	var compilationOutput struct {
 		Contracts map[string]struct {
@@ -168,7 +168,7 @@ func (v *Compiler) resultsFromSimple(compilerVersion string, out bytes.Buffer) (
 		}
 	}
 
-	var results []*CompilerResults
+	var results []*CompilerResult
 
 	for key, output := range compilationOutput.Contracts {
 		isEntryContract := false
@@ -181,7 +181,7 @@ func (v *Compiler) resultsFromSimple(compilerVersion string, out bytes.Buffer) (
 			return nil, err
 		}
 
-		results = append(results, &CompilerResults{
+		results = append(results, &CompilerResult{
 			IsEntryContract:  isEntryContract,
 			RequestedVersion: compilerVersion,
 			CompilerVersion:  compilationOutput.Version,
@@ -193,15 +193,14 @@ func (v *Compiler) resultsFromSimple(compilerVersion string, out bytes.Buffer) (
 		})
 	}
 
-	return results, nil
+	return &CompilerResults{Results: results}, nil
 }
 
 // resultsFromJson parses the output from the solc compiler when the output is in a JSON format.
 // It extracts detailed compilation information including bytecode, ABI, opcodes, and metadata.
 // Additionally, it separates any errors and warnings from the compilation process.
 // The method returns a slice of CompilerResults or an error if the output cannot be parsed.
-func (v *Compiler) resultsFromJson(compilerVersion string, out bytes.Buffer) ([]*CompilerResults, error) {
-	// Parse the output
+func (v *Compiler) resultsFromJson(compilerVersion string, out bytes.Buffer) (*CompilerResults, error) {
 	var compilationOutput struct {
 		Contracts map[string]map[string]struct {
 			Abi interface{} `json:"abi"`
@@ -213,6 +212,13 @@ func (v *Compiler) resultsFromJson(compilerVersion string, out bytes.Buffer) ([]
 					Opcodes          string                 `json:"opcodes"`
 					SourceMap        string                 `json:"sourceMap"`
 				} `json:"bytecode"`
+				DeployedBytecode struct {
+					GeneratedSources []interface{}          `json:"generatedSources"`
+					LinkReferences   map[string]interface{} `json:"linkReferences"`
+					Object           string                 `json:"object"`
+					Opcodes          string                 `json:"opcodes"`
+					SourceMap        string                 `json:"sourceMap"`
+				} `json:"deployedBytecode"`
 			} `json:"evm"`
 			Metadata string `json:"metadata"`
 		} `json:"contracts"`
@@ -224,7 +230,7 @@ func (v *Compiler) resultsFromJson(compilerVersion string, out bytes.Buffer) ([]
 		return nil, err
 	}
 
-	var results []*CompilerResults
+	var results []*CompilerResult
 
 	for key := range compilationOutput.Contracts {
 		for key, output := range compilationOutput.Contracts[key] {
@@ -238,10 +244,11 @@ func (v *Compiler) resultsFromJson(compilerVersion string, out bytes.Buffer) ([]
 				return nil, err
 			}
 
-			results = append(results, &CompilerResults{
+			results = append(results, &CompilerResult{
 				IsEntryContract:  isEntryContract,
 				RequestedVersion: compilerVersion,
 				Bytecode:         output.Evm.Bytecode.Object,
+				DeployedBytecode: output.Evm.DeployedBytecode.Object,
 				ABI:              string(abi),
 				Opcodes:          output.Evm.Bytecode.Opcodes,
 				ContractName:     key,
@@ -252,13 +259,13 @@ func (v *Compiler) resultsFromJson(compilerVersion string, out bytes.Buffer) ([]
 	}
 
 	if len(compilationOutput.Errors) > 0 {
-		results = append(results, &CompilerResults{
+		results = append(results, &CompilerResult{
 			RequestedVersion: compilerVersion,
 			Errors:           compilationOutput.Errors,
 		})
 	}
 
-	return results, nil
+	return &CompilerResults{Results: results}, nil
 }
 
 // CompilationError represents a compilation error.
@@ -270,13 +277,32 @@ type CompilationError struct {
 	Type      string `json:"type"`
 }
 
-// CompilerResults represents the results of a solc compilation.
 type CompilerResults struct {
+	Results []*CompilerResult `json:"results"`
+}
+
+func (cr *CompilerResults) GetResults() []*CompilerResult {
+	return cr.Results
+}
+
+func (cr *CompilerResults) GetEntryContract() *CompilerResult {
+	for _, result := range cr.Results {
+		if result.IsEntry() {
+			return result
+		}
+	}
+
+	return nil
+}
+
+// CompilerResults represents the results of a solc compilation.
+type CompilerResult struct {
 	IsEntryContract  bool               `json:"is_entry_contract"`
 	RequestedVersion string             `json:"requested_version"`
 	CompilerVersion  string             `json:"compiler_version"`
 	ContractName     string             `json:"contract_name"`
 	Bytecode         string             `json:"bytecode"`
+	DeployedBytecode string             `json:"deployedBytecode"`
 	ABI              string             `json:"abi"`
 	Opcodes          string             `json:"opcodes"`
 	Metadata         string             `json:"metadata"`
@@ -285,22 +311,22 @@ type CompilerResults struct {
 }
 
 // IsEntry returns true if the compiled contract is the entry contract.
-func (v *CompilerResults) IsEntry() bool {
+func (v *CompilerResult) IsEntry() bool {
 	return v.IsEntryContract
 }
 
 // GetOpcodes returns the compiled contract's opcodes.
-func (v *CompilerResults) GetOpcodes() string {
+func (v *CompilerResult) GetOpcodes() string {
 	return v.Opcodes
 }
 
 // GetMetadata returns the compiled contract's metadata.
-func (v *CompilerResults) GetMetadata() string {
+func (v *CompilerResult) GetMetadata() string {
 	return v.Metadata
 }
 
 // HasErrors returns true if there are compilation errors.
-func (v *CompilerResults) HasErrors() bool {
+func (v *CompilerResult) HasErrors() bool {
 	if v == nil {
 		return false
 	}
@@ -309,7 +335,7 @@ func (v *CompilerResults) HasErrors() bool {
 }
 
 // HasWarnings returns true if there are compilation warnings.
-func (v *CompilerResults) HasWarnings() bool {
+func (v *CompilerResult) HasWarnings() bool {
 	if v == nil {
 		return false
 	}
@@ -318,36 +344,41 @@ func (v *CompilerResults) HasWarnings() bool {
 }
 
 // GetErrors returns the compilation errors.
-func (v *CompilerResults) GetErrors() []CompilationError {
+func (v *CompilerResult) GetErrors() []CompilationError {
 	return v.Errors
 }
 
 // GetWarnings returns the compilation warnings.
-func (v *CompilerResults) GetWarnings() []CompilationError {
+func (v *CompilerResult) GetWarnings() []CompilationError {
 	return v.Warnings
 }
 
 // GetABI returns the compiled contract's ABI (Application Binary Interface) in JSON format.
-func (v *CompilerResults) GetABI() string {
+func (v *CompilerResult) GetABI() string {
 	return v.ABI
 }
 
 // GetBytecode returns the compiled contract's bytecode.
-func (v *CompilerResults) GetBytecode() string {
+func (v *CompilerResult) GetBytecode() string {
 	return v.Bytecode
 }
 
+// GetDeployedBytecode returns the compiled contract's deployed bytecode.
+func (v *CompilerResult) GetDeployedBytecode() string {
+	return v.DeployedBytecode
+}
+
 // GetContractName returns the name of the compiled contract.
-func (v *CompilerResults) GetContractName() string {
+func (v *CompilerResult) GetContractName() string {
 	return v.ContractName
 }
 
 // GetRequestedVersion returns the requested compiler version used for compilation.
-func (v *CompilerResults) GetRequestedVersion() string {
+func (v *CompilerResult) GetRequestedVersion() string {
 	return v.RequestedVersion
 }
 
 // GetCompilerVersion returns the actual compiler version used for compilation.
-func (v *CompilerResults) GetCompilerVersion() string {
+func (v *CompilerResult) GetCompilerVersion() string {
 	return v.CompilerVersion
 }
