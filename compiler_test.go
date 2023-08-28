@@ -410,6 +410,7 @@ func TestCompilerFromSolc(t *testing.T) {
 			if testCase.sync {
 				err := solc.Sync()
 				assert.NoError(t, err)
+				assert.True(t, solc.IsSynced())
 			}
 
 			compilerResults, err := solc.Compile(context.TODO(), testCase.source, testCase.compilerConfig)
@@ -556,6 +557,8 @@ func TestCompilerWithJSON(t *testing.T) {
 
 			assert.NoError(t, err)
 			assert.NotNil(t, compilerResults)
+			assert.NotNil(t, compilerResults.GetResults())
+			assert.NotNil(t, compilerResults.GetEntryContract())
 
 			for _, result := range compilerResults.GetResults() {
 				assert.NotNil(t, result.IsEntry())
