@@ -113,15 +113,15 @@ func (v *Compiler) Compile() ([]*CompilerResults, error) {
 			zap.String("version", compilerVersion),
 			zap.String("stderr", stderr.String()),
 		)
-		var errors []string
-		var warnings []string
+		var errors []CompilationError
+		var warnings []CompilationError
 
 		// Parsing the error message to extract line and column information.
 		errorMessage := stderr.String()
 		if strings.Contains(errorMessage, "Error:") {
-			errors = append(errors, errorMessage)
+			errors = append(errors, CompilationError{Message: errorMessage})
 		} else if strings.HasPrefix(errorMessage, "Warning:") {
-			warnings = append(warnings, errorMessage)
+			warnings = append(warnings, CompilationError{Message: errorMessage})
 		}
 
 		// Construct the CompilerResults structure with errors and warnings.
@@ -159,12 +159,12 @@ func (v *Compiler) resultsFromSimple(compilerVersion string, out bytes.Buffer) (
 	}
 
 	// Separate errors and warnings
-	var errors, warnings []string
+	var errors, warnings []CompilationError
 	for _, msg := range compilationOutput.Errors {
 		if strings.Contains(msg, "Warning:") {
-			warnings = append(warnings, msg)
+			warnings = append(warnings, CompilationError{Message: msg})
 		} else {
-			errors = append(errors, msg)
+			errors = append(errors, CompilationError{Message: msg})
 		}
 	}
 
@@ -216,22 +216,12 @@ func (v *Compiler) resultsFromJson(compilerVersion string, out bytes.Buffer) ([]
 			} `json:"evm"`
 			Metadata string `json:"metadata"`
 		} `json:"contracts"`
-		Errors  []string `json:"errors"`
-		Version string   `json:"version"`
+		Errors  []CompilationError `json:"errors"`
+		Version string             `json:"version"`
 	}
 
 	if err := json.Unmarshal(out.Bytes(), &compilationOutput); err != nil {
 		return nil, err
-	}
-
-	// Separate errors and warnings
-	var errors, warnings []string
-	for _, msg := range compilationOutput.Errors {
-		if strings.Contains(msg, "Warning:") {
-			warnings = append(warnings, msg)
-		} else {
-			errors = append(errors, msg)
-		}
 	}
 
 	var results []*CompilerResults
@@ -255,28 +245,43 @@ func (v *Compiler) resultsFromJson(compilerVersion string, out bytes.Buffer) ([]
 				ABI:              string(abi),
 				Opcodes:          output.Evm.Bytecode.Opcodes,
 				ContractName:     key,
-				Errors:           errors,
-				Warnings:         warnings,
+				Errors:           compilationOutput.Errors,
 				Metadata:         output.Metadata,
 			})
 		}
 	}
 
+	if len(compilationOutput.Errors) > 0 {
+		results = append(results, &CompilerResults{
+			RequestedVersion: compilerVersion,
+			Errors:           compilationOutput.Errors,
+		})
+	}
+
 	return results, nil
+}
+
+// CompilationError represents a compilation error.
+type CompilationError struct {
+	Component string `json:"component"`
+	Formatted string `json:"formattedMessage"`
+	Message   string `json:"message"`
+	Severity  string `json:"severity"`
+	Type      string `json:"type"`
 }
 
 // CompilerResults represents the results of a solc compilation.
 type CompilerResults struct {
-	IsEntryContract  bool     `json:"is_entry_contract"`
-	RequestedVersion string   `json:"requested_version"`
-	CompilerVersion  string   `json:"compiler_version"`
-	ContractName     string   `json:"contract_name"`
-	Bytecode         string   `json:"bytecode"`
-	ABI              string   `json:"abi"`
-	Opcodes          string   `json:"opcodes"`
-	Metadata         string   `json:"metadata"`
-	Errors           []string `json:"errors"`
-	Warnings         []string `json:"warnings"`
+	IsEntryContract  bool               `json:"is_entry_contract"`
+	RequestedVersion string             `json:"requested_version"`
+	CompilerVersion  string             `json:"compiler_version"`
+	ContractName     string             `json:"contract_name"`
+	Bytecode         string             `json:"bytecode"`
+	ABI              string             `json:"abi"`
+	Opcodes          string             `json:"opcodes"`
+	Metadata         string             `json:"metadata"`
+	Errors           []CompilationError `json:"errors"`
+	Warnings         []CompilationError `json:"warnings"`
 }
 
 // IsEntry returns true if the compiled contract is the entry contract.
@@ -313,12 +318,12 @@ func (v *CompilerResults) HasWarnings() bool {
 }
 
 // GetErrors returns the compilation errors.
-func (v *CompilerResults) GetErrors() []string {
+func (v *CompilerResults) GetErrors() []CompilationError {
 	return v.Errors
 }
 
 // GetWarnings returns the compilation warnings.
-func (v *CompilerResults) GetWarnings() []string {
+func (v *CompilerResults) GetWarnings() []CompilationError {
 	return v.Warnings
 }
 
