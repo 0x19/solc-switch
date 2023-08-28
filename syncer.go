@@ -56,6 +56,11 @@ func (s *Solc) SyncReleases() ([]Version, error) {
 
 		var versions []Version
 		if err := json.Unmarshal(bodyBytes, &versions); err != nil {
+			zap.L().Error(
+				"Failed to unmarshal releases response",
+				zap.Error(err),
+				zap.Any("response", string(bodyBytes)),
+			)
 			return nil, err
 		}
 
