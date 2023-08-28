@@ -279,6 +279,21 @@ type CompilerResults struct {
 	Warnings         []string `json:"warnings"`
 }
 
+// IsEntry returns true if the compiled contract is the entry contract.
+func (v *CompilerResults) IsEntry() bool {
+	return v.IsEntryContract
+}
+
+// GetOpcodes returns the compiled contract's opcodes.
+func (v *CompilerResults) GetOpcodes() string {
+	return v.Opcodes
+}
+
+// GetMetadata returns the compiled contract's metadata.
+func (v *CompilerResults) GetMetadata() string {
+	return v.Metadata
+}
+
 // HasErrors returns true if there are compilation errors.
 func (v *CompilerResults) HasErrors() bool {
 	if v == nil {
