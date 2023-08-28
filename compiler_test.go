@@ -212,7 +212,7 @@ func TestCompiler(t *testing.T) {
 
 			compilerResults, err := compiler.Compile()
 			if testCase.wantCompileErr {
-				for _, result := range compilerResults {
+				for _, result := range compilerResults.GetResults() {
 					assert.True(t, result.HasErrors())
 					assert.False(t, result.HasWarnings())
 					assert.GreaterOrEqual(t, len(result.GetWarnings()), 0)
@@ -225,7 +225,7 @@ func TestCompiler(t *testing.T) {
 			assert.NoError(t, err)
 			assert.NotNil(t, compilerResults)
 
-			for _, result := range compilerResults {
+			for _, result := range compilerResults.GetResults() {
 				assert.NotEmpty(t, result.GetRequestedVersion())
 				assert.NotEmpty(t, result.GetCompilerVersion())
 				assert.NotEmpty(t, result.GetBytecode())
@@ -293,12 +293,12 @@ func TestCompilerFromSolc(t *testing.T) {
 			name: "Invalid Source",
 			source: `// SPDX-License-Identifier: MIT
 			pragma solidity ^0.8.0;
-			
+
 			contract SimpleStorage {
 				uint256 private storedData;
-			
+
 				function set(uint256 x) public {
-				
+
 			}`,
 			wantCompileErr: true,
 			compilerConfig: func() *CompilerConfig {
@@ -314,14 +314,14 @@ func TestCompilerFromSolc(t *testing.T) {
 			name: "Invalid Compiler Version",
 			source: `// SPDX-License-Identifier: MIT
 			pragma solidity ^0.8.0;
-			
+
 			contract SimpleStorage {
 				uint256 private storedData;
-			
+
 				function set(uint256 x) public {
 					storedData = x;
 				}
-			
+
 				function get() public view returns (uint256) {
 					return storedData;
 				}
@@ -340,14 +340,14 @@ func TestCompilerFromSolc(t *testing.T) {
 			name: "Invalid Compiler Config Version",
 			source: `// SPDX-License-Identifier: MIT
 			pragma solidity ^0.8.0;
-			
+
 			contract SimpleStorage {
 				uint256 private storedData;
-			
+
 				function set(uint256 x) public {
 					storedData = x;
 				}
-			
+
 				function get() public view returns (uint256) {
 					return storedData;
 				}
@@ -364,14 +364,14 @@ func TestCompilerFromSolc(t *testing.T) {
 			name: "Invalid Compiler Solc Instance",
 			source: `// SPDX-License-Identifier: MIT
 			pragma solidity ^0.8.0;
-			
+
 			contract SimpleStorage {
 				uint256 private storedData;
-			
+
 				function set(uint256 x) public {
 					storedData = x;
 				}
-			
+
 				function get() public view returns (uint256) {
 					return storedData;
 				}
@@ -410,24 +410,19 @@ func TestCompilerFromSolc(t *testing.T) {
 			if testCase.sync {
 				err := solc.Sync()
 				assert.NoError(t, err)
+				assert.True(t, solc.IsSynced())
 			}
 
 			compilerResults, err := solc.Compile(context.TODO(), testCase.source, testCase.compilerConfig)
 			if testCase.wantCompileErr {
-				for _, result := range compilerResults {
-					assert.True(t, result.HasErrors())
-					assert.False(t, result.HasWarnings())
-					assert.GreaterOrEqual(t, len(result.GetWarnings()), 0)
-					assert.GreaterOrEqual(t, len(result.GetErrors()), 1)
-				}
-
+				assert.Nil(t, compilerResults)
 				return
 			}
 
 			assert.NoError(t, err)
 			assert.NotNil(t, compilerResults)
 
-			for _, result := range compilerResults {
+			for _, result := range compilerResults.GetResults() {
 				assert.NotEmpty(t, result.GetRequestedVersion())
 				assert.NotEmpty(t, result.GetCompilerVersion())
 				assert.NotEmpty(t, result.GetBytecode())
@@ -550,7 +545,7 @@ func TestCompilerWithJSON(t *testing.T) {
 
 			compilerResults, err := compiler.Compile()
 			if testCase.wantCompileErr {
-				for _, result := range compilerResults {
+				for _, result := range compilerResults.GetResults() {
 					assert.True(t, result.HasErrors())
 					assert.False(t, result.HasWarnings())
 					assert.GreaterOrEqual(t, len(result.GetWarnings()), 0)
@@ -562,8 +557,10 @@ func TestCompilerWithJSON(t *testing.T) {
 
 			assert.NoError(t, err)
 			assert.NotNil(t, compilerResults)
+			assert.NotNil(t, compilerResults.GetResults())
+			assert.NotNil(t, compilerResults.GetEntryContract())
 
-			for _, result := range compilerResults {
+			for _, result := range compilerResults.GetResults() {
 				assert.NotNil(t, result.IsEntry())
 				assert.NotEmpty(t, result.GetRequestedVersion())
 				assert.NotEmpty(t, result.GetBytecode())
