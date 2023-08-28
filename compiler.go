@@ -20,6 +20,7 @@ type Compiler struct {
 }
 
 // NewCompiler creates a new Compiler instance with the given context, configuration, and source.
+// It returns an error if the provided configuration, solc instance, or source is invalid.
 func NewCompiler(ctx context.Context, solc *Solc, config *CompilerConfig, source string) (*Compiler, error) {
 	if config == nil {
 		return nil, fmt.Errorf("config must be provided to create new compiler")
@@ -68,6 +69,7 @@ func (v *Compiler) GetSources() string {
 }
 
 // Compile compiles the Solidity sources using the configured compiler version and arguments.
+// It returns the compilation results or an error if the compilation fails.
 func (v *Compiler) Compile() ([]*CompilerResults, error) {
 	compilerVersion := v.GetCompilerVersion()
 	if compilerVersion == "" {
@@ -131,6 +133,74 @@ func (v *Compiler) Compile() ([]*CompilerResults, error) {
 		return []*CompilerResults{results}, err
 	}
 
+	if v.config.JsonConfig != nil {
+		return v.resultsFromJson(compilerVersion, out)
+	}
+
+	return v.resultsFromSimple(compilerVersion, out)
+}
+
+// resultsFromSimple parses the output from the solc compiler when the output is in a simple format.
+// It extracts the compilation details such as bytecode, ABI, and any errors or warnings.
+// The method returns a slice of CompilerResults or an error if the output cannot be parsed.
+func (v *Compiler) resultsFromSimple(compilerVersion string, out bytes.Buffer) ([]*CompilerResults, error) {
+	// Parse the output
+	var compilationOutput struct {
+		Contracts map[string]struct {
+			Bin string      `json:"bin"`
+			Abi interface{} `json:"abi"`
+		} `json:"contracts"`
+		Errors  []string `json:"errors"`
+		Version string   `json:"version"`
+	}
+
+	if err := json.Unmarshal(out.Bytes(), &compilationOutput); err != nil {
+		return nil, err
+	}
+
+	// Separate errors and warnings
+	var errors, warnings []string
+	for _, msg := range compilationOutput.Errors {
+		if strings.Contains(msg, "Warning:") {
+			warnings = append(warnings, msg)
+		} else {
+			errors = append(errors, msg)
+		}
+	}
+
+	var results []*CompilerResults
+
+	for key, output := range compilationOutput.Contracts {
+		isEntryContract := false
+		if v.config.GetEntrySourceName() != "" && key == "<stdin>:"+v.config.GetEntrySourceName() {
+			isEntryContract = true
+		}
+
+		abi, err := json.Marshal(output.Abi)
+		if err != nil {
+			return nil, err
+		}
+
+		results = append(results, &CompilerResults{
+			IsEntryContract:  isEntryContract,
+			RequestedVersion: compilerVersion,
+			CompilerVersion:  compilationOutput.Version,
+			Bytecode:         output.Bin,
+			ABI:              string(abi),
+			ContractName:     strings.TrimLeft(key, "<stdin>:"),
+			Errors:           errors,
+			Warnings:         warnings,
+		})
+	}
+
+	return results, nil
+}
+
+// resultsFromJson parses the output from the solc compiler when the output is in a JSON format.
+// It extracts detailed compilation information including bytecode, ABI, opcodes, and metadata.
+// Additionally, it separates any errors and warnings from the compilation process.
+// The method returns a slice of CompilerResults or an error if the output cannot be parsed.
+func (v *Compiler) resultsFromJson(compilerVersion string, out bytes.Buffer) ([]*CompilerResults, error) {
 	// Parse the output
 	var compilationOutput struct {
 		Contracts map[string]map[string]struct {
@@ -150,8 +220,7 @@ func (v *Compiler) Compile() ([]*CompilerResults, error) {
 		Version string   `json:"version"`
 	}
 
-	err = json.Unmarshal(out.Bytes(), &compilationOutput)
-	if err != nil {
+	if err := json.Unmarshal(out.Bytes(), &compilationOutput); err != nil {
 		return nil, err
 	}
 
