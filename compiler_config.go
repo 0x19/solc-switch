@@ -58,19 +58,20 @@ func NewCompilerConfigFromJSON(compilerVersion string, entrySourceName string, c
 	toReturn := &CompilerConfig{
 		EntrySourceName: entrySourceName,
 		CompilerVersion: compilerVersion,
-		Arguments: []string{
-			"--standard-json", // Output to stdout.
-		},
-		JsonConfig: config,
+		Arguments:       []string{"--standard-json"},
+		JsonConfig:      config,
 	}
 
 	if _, err := toReturn.SanitizeArguments(toReturn.Arguments); err != nil {
 		return nil, err
 	}
 
-	/* 	if err := toReturn.Validate(); err != nil {
-		return nil, err
-	} */
+	/*
+		TODO: Validation at this point for the JSON config is not done.
+		It's assumed that the caller has already validated the JSON config.
+		if err := toReturn.Validate(); err != nil {
+			return nil, err
+		} */
 
 	return toReturn, nil
 }

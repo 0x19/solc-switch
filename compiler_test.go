@@ -564,10 +564,13 @@ func TestCompilerWithJSON(t *testing.T) {
 			assert.NotNil(t, compilerResults)
 
 			for _, result := range compilerResults {
+				assert.NotNil(t, result.IsEntry())
 				assert.NotEmpty(t, result.GetRequestedVersion())
 				assert.NotEmpty(t, result.GetBytecode())
 				assert.NotEmpty(t, result.GetABI())
 				assert.NotEmpty(t, result.GetContractName())
+				assert.NotEmpty(t, result.GetOpcodes())
+				assert.NotEmpty(t, result.GetMetadata())
 				assert.GreaterOrEqual(t, len(result.GetWarnings()), 0)
 				assert.GreaterOrEqual(t, len(result.GetErrors()), 0)
 			}
