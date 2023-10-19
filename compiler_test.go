@@ -214,8 +214,6 @@ func TestCompiler(t *testing.T) {
 			if testCase.wantCompileErr {
 				for _, result := range compilerResults.GetResults() {
 					assert.True(t, result.HasErrors())
-					assert.False(t, result.HasWarnings())
-					assert.GreaterOrEqual(t, len(result.GetWarnings()), 0)
 					assert.GreaterOrEqual(t, len(result.GetErrors()), 1)
 				}
 
@@ -231,7 +229,6 @@ func TestCompiler(t *testing.T) {
 				assert.NotEmpty(t, result.GetBytecode())
 				assert.NotEmpty(t, result.GetABI())
 				assert.NotEmpty(t, result.GetContractName())
-				assert.GreaterOrEqual(t, len(result.GetWarnings()), 0)
 				assert.GreaterOrEqual(t, len(result.GetErrors()), 0)
 			}
 		})
@@ -428,7 +425,6 @@ func TestCompilerFromSolc(t *testing.T) {
 				assert.NotEmpty(t, result.GetBytecode())
 				assert.NotEmpty(t, result.GetABI())
 				assert.NotEmpty(t, result.GetContractName())
-				assert.GreaterOrEqual(t, len(result.GetWarnings()), 0)
 				assert.GreaterOrEqual(t, len(result.GetErrors()), 0)
 			}
 		})
@@ -547,8 +543,6 @@ func TestCompilerWithJSON(t *testing.T) {
 			if testCase.wantCompileErr {
 				for _, result := range compilerResults.GetResults() {
 					assert.True(t, result.HasErrors())
-					assert.False(t, result.HasWarnings())
-					assert.GreaterOrEqual(t, len(result.GetWarnings()), 0)
 					assert.GreaterOrEqual(t, len(result.GetErrors()), 1)
 				}
 
@@ -568,7 +562,6 @@ func TestCompilerWithJSON(t *testing.T) {
 				assert.NotEmpty(t, result.GetContractName())
 				assert.NotEmpty(t, result.GetOpcodes())
 				assert.NotEmpty(t, result.GetMetadata())
-				assert.GreaterOrEqual(t, len(result.GetWarnings()), 0)
 				assert.GreaterOrEqual(t, len(result.GetErrors()), 0)
 			}
 		})

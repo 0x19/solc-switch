@@ -111,24 +111,19 @@ func (v *Compiler) Compile() (*CompilerResults, error) {
 		zap.L().Error(
 			"Failed to compile Solidity sources",
 			zap.String("version", compilerVersion),
+			zap.String("stdout", out.String()),
 			zap.String("stderr", stderr.String()),
 		)
 		var errors []CompilationError
-		var warnings []CompilationError
 
 		// Parsing the error message to extract line and column information.
 		errorMessage := stderr.String()
-		if strings.Contains(errorMessage, "Error:") {
-			errors = append(errors, CompilationError{Message: errorMessage})
-		} else if strings.HasPrefix(errorMessage, "Warning:") {
-			warnings = append(warnings, CompilationError{Message: errorMessage})
-		}
+		errors = append(errors, CompilationError{Message: errorMessage})
 
 		// Construct the CompilerResults structure with errors and warnings.
 		results := &CompilerResult{
 			RequestedVersion: compilerVersion,
 			Errors:           errors,
-			Warnings:         warnings,
 		}
 		return &CompilerResults{Results: []*CompilerResult{results}}, err
 	}
@@ -159,13 +154,9 @@ func (v *Compiler) resultsFromSimple(compilerVersion string, out bytes.Buffer) (
 	}
 
 	// Separate errors and warnings
-	var errors, warnings []CompilationError
+	var errors []CompilationError
 	for _, msg := range compilationOutput.Errors {
-		if strings.Contains(msg, "Warning:") {
-			warnings = append(warnings, CompilationError{Message: msg})
-		} else {
-			errors = append(errors, CompilationError{Message: msg})
-		}
+		errors = append(errors, CompilationError{Message: msg})
 	}
 
 	var results []*CompilerResult
@@ -189,7 +180,6 @@ func (v *Compiler) resultsFromSimple(compilerVersion string, out bytes.Buffer) (
 			ABI:              string(abi),
 			ContractName:     strings.TrimLeft(key, "<stdin>:"),
 			Errors:           errors,
-			Warnings:         warnings,
 		})
 	}
 
@@ -268,13 +258,20 @@ func (v *Compiler) resultsFromJson(compilerVersion string, out bytes.Buffer) (*C
 	return &CompilerResults{Results: results}, nil
 }
 
+type CompilationErrorSourceLocation struct {
+	File  string `json:"file"`
+	Start int    `json:"start"`
+	End   int    `json:"end"`
+}
+
 // CompilationError represents a compilation error.
 type CompilationError struct {
-	Component string `json:"component"`
-	Formatted string `json:"formattedMessage"`
-	Message   string `json:"message"`
-	Severity  string `json:"severity"`
-	Type      string `json:"type"`
+	Component      string                         `json:"component"`
+	Formatted      string                         `json:"formatted_message"`
+	Message        string                         `json:"message"`
+	Severity       string                         `json:"severity"`
+	Type           string                         `json:"type"`
+	SourceLocation CompilationErrorSourceLocation `json:"sourceLocation"`
 }
 
 type CompilerResults struct {
@@ -286,6 +283,10 @@ func (cr *CompilerResults) GetResults() []*CompilerResult {
 }
 
 func (cr *CompilerResults) GetEntryContract() *CompilerResult {
+	if cr == nil {
+		return nil
+	}
+
 	for _, result := range cr.Results {
 		if result.IsEntry() {
 			return result
@@ -307,7 +308,6 @@ type CompilerResult struct {
 	Opcodes          string             `json:"opcodes"`
 	Metadata         string             `json:"metadata"`
 	Errors           []CompilationError `json:"errors"`
-	Warnings         []CompilationError `json:"warnings"`
 }
 
 // IsEntry returns true if the compiled contract is the entry contract.
@@ -334,23 +334,9 @@ func (v *CompilerResult) HasErrors() bool {
 	return len(v.Errors) > 0
 }
 
-// HasWarnings returns true if there are compilation warnings.
-func (v *CompilerResult) HasWarnings() bool {
-	if v == nil {
-		return false
-	}
-
-	return len(v.Warnings) > 0
-}
-
 // GetErrors returns the compilation errors.
 func (v *CompilerResult) GetErrors() []CompilationError {
 	return v.Errors
-}
-
-// GetWarnings returns the compilation warnings.
-func (v *CompilerResult) GetWarnings() []CompilationError {
-	return v.Warnings
 }
 
 // GetABI returns the compiled contract's ABI (Application Binary Interface) in JSON format.
