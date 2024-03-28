@@ -10,6 +10,7 @@ jobs:
       matrix:
         go:
           - '1.19'
+          - '1.22'
 
     steps:
       - uses: actions/setup-go@v3
