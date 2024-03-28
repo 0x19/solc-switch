@@ -8,6 +8,7 @@ import (
 	"math/big"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -103,6 +104,7 @@ func (s *Solc) SyncBinaries(versions []Version, limitVersion string) error {
 
 		for _, asset := range version.Assets {
 			distribution := s.GetDistributionForAsset()
+
 			if strings.Contains(asset.Name, distribution) {
 				filename := fmt.Sprintf("%s/solc-%s", s.config.GetReleasesPath(), versionTag)
 				if distribution == "solc-windows" {
@@ -236,38 +238,17 @@ func (s *Solc) downloadFile(file string, url string) error {
 	// Just a bit of the time because we could receive 503 from GitHub so we don't want to spam them
 	randomDelayBetween500And1500()
 
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return err
-	}
+	// Construct the curl command
+	curlCmd := exec.Command("curl", "-s", "-L", url, "-o", file)
+	curlCmd.Stderr = os.Stderr
 
-	req.Header.Add("Authorization", fmt.Sprintf("token %s", s.config.personalAccessToken))
-	req = req.WithContext(s.ctx)
-
-	resp, err := s.GetHTTPClient().Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to download file: %s", resp.Status)
-	}
-
-	out, err := os.Create(filepath.Clean(file))
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	if _, err = io.Copy(out, resp.Body); err != nil {
-		return err
+	// Execute curl
+	if err := curlCmd.Run(); err != nil {
+		return fmt.Errorf("curl command failed: %v", err)
 	}
 
 	// #nosec G302
-	// G302 (CWE-276): Expect file permissions to be 0600 or less (Confidence: HIGH, Severity: MEDIUM)
-	// We want executable files to be executable by the user running the program so we can't use 0600.
-	if err := os.Chmod(file, 0700); err != nil {
+	if err := os.Chmod(file, 0755); err != nil {
 		return fmt.Errorf("failed to set file as executable: %v", err)
 	}
 
